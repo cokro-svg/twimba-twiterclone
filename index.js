@@ -20,9 +20,19 @@ document.addEventListener('click', function(e){
     else if(e.target.dataset.replyTweet){
         handleReplySubmit(e.target.dataset.replyTweet)
     }
+    else if(e.target.dataset.delete){
+        handleDeleteClick(e.target.dataset.delete)
+    }
     else if(e.target.id === 'tweet-btn'){
         handleTweetBtnClick()
     }
+       // else if(e.target.dataset.delete){
+    //     tweetsData.splice(tweetsData.findIndex(function(tweet){
+    //         return tweet.uuid === e.target.dataset.delete
+    //     }), 1)
+    //     saveToLocalStorage()
+    //     render()
+    // }
 })
  
 function handleLikeClick(tweetId){ 
@@ -61,6 +71,13 @@ function handleReplyClick(replyId){
     document.getElementById(`replies-${replyId}`).classList.toggle('hidden')
 }
 
+function handleDeleteClick(tweetId){
+    tweetsData.splice(tweetsData.findIndex(function(tweet){
+        return tweet.uuid === tweetId
+    }), 1)
+    saveToLocalStorage()
+    render()
+}
 function handleReplySubmit(tweetId){
     const replyInput = document.getElementById(`reply-input-${tweetId}`)
     
@@ -164,6 +181,11 @@ function getFeedHtml(){
                     data-retweet="${tweet.uuid}"
                     ></i>
                     ${tweet.retweets}
+                </span>
+                <span class="tweet-detail">
+                    <i class="fa-solid fa-trash"
+                    data-delete="${tweet.uuid}"
+                    ></i>
                 </span>
             </div>   
         </div>            
