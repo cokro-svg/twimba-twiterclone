@@ -1,5 +1,11 @@
-import { tweetsData } from './data.js'
+import { tweetsData as defaultTweetsData } from './data.js';
+
 import { v4 as uuidv4 } from 'https://jspm.dev/uuid';
+
+const tweetsData = JSON.parse(localStorage.getItem('tweetsData')) || defaultTweetsData;
+function saveToLocalStorage(){
+    localStorage.setItem('tweetsData', JSON.stringify(tweetsData))
+}
 
 document.addEventListener('click', function(e){
     if(e.target.dataset.like){
@@ -10,6 +16,9 @@ document.addEventListener('click', function(e){
     }
     else if(e.target.dataset.reply){
         handleReplyClick(e.target.dataset.reply)
+    }
+    else if(e.target.dataset.replyTweet){
+        handleReplySubmit(e.target.dataset.replyTweet)
     }
     else if(e.target.id === 'tweet-btn'){
         handleTweetBtnClick()
@@ -28,6 +37,7 @@ function handleLikeClick(tweetId){
         targetTweetObj.likes++ 
     }
     targetTweetObj.isLiked = !targetTweetObj.isLiked
+    saveToLocalStorage()
     render()
 }
 
@@ -43,11 +53,31 @@ function handleRetweetClick(tweetId){
         targetTweetObj.retweets++
     }
     targetTweetObj.isRetweeted = !targetTweetObj.isRetweeted
+    saveToLocalStorage()
     render() 
 }
 
 function handleReplyClick(replyId){
     document.getElementById(`replies-${replyId}`).classList.toggle('hidden')
+}
+
+function handleReplySubmit(tweetId){
+    const replyInput = document.getElementById(`reply-input-${tweetId}`)
+    
+    if(replyInput.value){
+        const targetTweetObj = tweetsData.filter(function(tweet){
+            return tweet.uuid === tweetId
+        })[0]
+        
+        targetTweetObj.replies.push({
+            handle: `@Scrimba`,
+            profilePic: `images/scrimbalogo.png`,
+            tweetText: replyInput.value
+        })
+        saveToLocalStorage()
+        render()
+        replyInput.value = ''
+    }
 }
 
 function handleTweetBtnClick(){
@@ -65,6 +95,8 @@ function handleTweetBtnClick(){
             isRetweeted: false,
             uuid: uuidv4()
         })
+        console.log(tweetsData[0].uuid)
+        saveToLocalStorage()
     render()
     tweetInput.value = ''
     }
@@ -82,14 +114,14 @@ function getFeedHtml(){
             likeIconClass = 'liked'
         }
         
-        let retweetIconClass = ''
+        let retweetIconClass = ''       
         
         if (tweet.isRetweeted){
             retweetIconClass = 'retweeted'
         }
         
         let repliesHtml = ''
-        
+
         if(tweet.replies.length > 0){
             tweet.replies.forEach(function(reply){
                 repliesHtml+=`
@@ -136,8 +168,11 @@ function getFeedHtml(){
             </div>   
         </div>            
     </div>
-    <div class="hidden" id="replies-${tweet.uuid}">
+    <div class="hidden" id="replies-${tweet.uuid}">     
         ${repliesHtml}
+        <div class="reply-input-area">
+        <textarea placeholder="Tweet your reply" id="reply-input-${tweet.uuid}"></textarea>
+        <button class="reply-btn" data-reply-tweet="${tweet.uuid}">Reply</button>   
     </div>   
 </div>
 `
